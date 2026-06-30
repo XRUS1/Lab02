@@ -1,1 +1,1 @@
-# Lab02
+# Lab02 - Realidad aumentada Three.js y animación
