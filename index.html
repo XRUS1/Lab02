@@ -8,6 +8,8 @@
 		<style>
 			body {
 				touch-action: none;
+				margin: 0;
+				overflow: hidden;
 			}
 		</style>
 	</head>
@@ -93,6 +95,34 @@
 					object.position.z = -1.5;
 //					object.rotation.y = Math.PI / 2;   // Rotando 90
 
+					// --- PANEL DE ANIMACIONES EN PANTALLA ---
+					const panel = document.createElement('div');
+					panel.id = 'animPanel';
+					panel.style.position = 'absolute';
+					panel.style.top = '20px';
+					panel.style.left = '20px';
+					panel.style.background = 'rgba(0, 0, 0, 0.85)';
+					panel.style.color = '#00ff88';
+					panel.style.padding = '20px';
+					panel.style.fontFamily = 'monospace';
+					panel.style.fontSize = '15px';
+					panel.style.borderRadius = '10px';
+					panel.style.zIndex = '999';
+					panel.style.maxWidth = '320px';
+					panel.style.lineHeight = '1.6';
+
+					let html = `<strong style="color:#fff; font-size:16px;">🎬 Animaciones de Lenador.fbx</strong><br>`;
+					html += `<span style="color:#aaa;">Total: ${object.animations.length}</span><br><br>`;
+
+					object.animations.forEach((clip, i) => {
+						const isPlaying = (i === 4) ? ' ← ACTUAL' : '';
+						html += `<span style="color:#ffd700;">[${i}]</span> ${clip.name}<span style="color:#ff5555;">${isPlaying}</span><br>`;
+					});
+
+					panel.innerHTML = html;
+					document.body.appendChild(panel);
+					// -----------------------------------------
+
 					mixer = new THREE.AnimationMixer( object );
 
 					const action = mixer.clipAction( object.animations[ 4] );
@@ -130,7 +160,17 @@
 
 				document.body.appendChild( ARButton.createButton( renderer ) );
 
+				// Ocultar panel al entrar a XR
+				renderer.xr.addEventListener('sessionstart', () => {
+					const panel = document.getElementById('animPanel');
+					if (panel) panel.style.display = 'none';
+				});
 
+				// Mostrar panel al salir de XR
+				renderer.xr.addEventListener('sessionend', () => {
+					const panel = document.getElementById('animPanel');
+					if (panel) panel.style.display = 'block';
+				});
 
 				//
 
