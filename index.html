@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -83,10 +82,24 @@
 					} );
 
 
-				// Load FBX Model and Animation (SEPARADOS)
+				// LoadingManager para reescribir rutas de texturas
+				const manager = new THREE.LoadingManager();
+				manager.setURLModifier( function ( url ) {
+
+					// Si la URL contiene un nombre de textura NPC_, redirigir a la carpeta local
+					if ( url.includes( 'NPC_' ) ) {
+						const parts = url.split( /[\\\\/]/ );
+						const filename = parts[ parts.length - 1 ];
+						return 'models/fbx/Textures/' + filename;
+					}
+
+					return url;
+
+				} );
+
 
 				// 1. Cargar el MODELO 3D del lenador
-				const modelLoader = new FBXLoader();
+				const modelLoader = new FBXLoader( manager );
 				modelLoader.load( 'models/fbx/FreeCharacter_model.FBX', function ( personaje ) {
 
 					// Escala y posicion
@@ -95,16 +108,19 @@
 					personaje.position.y = -0.5;
 					personaje.position.z = -1.5;
 
-					// Sombras
+					// Sombras y materiales
 					personaje.traverse( function ( child ) {
 						if ( child.isMesh ) {
 							child.castShadow = true;
 							child.receiveShadow = true;
+							if ( child.material ) {
+								child.material.needsUpdate = true;
+							}
 						}
 					} );
 
 					// 2. Cargar el archivo de ANIMACIONES
-					const animLoader = new FBXLoader();
+					const animLoader = new FBXLoader( manager );
 					animLoader.load( 'models/fbx/FreeCharacter_Animations.FBX', function ( animObj ) {
 
 						// Crear mixer SOBRE el personaje (modelo)
@@ -130,15 +146,15 @@
 						html += '<span style="color:#aaa;">Total: ' + animObj.animations.length + '</span><br><br>';
 
 						animObj.animations.forEach((clip, i) => {
-							const isPlaying = (i === 2) ? ' <- ACTUAL' : '';
+							const isPlaying = (i === 1) ? ' <- ACTUAL' : '';
 							html += '<span style="color:#ffd700;">[' + i + ']</span> ' + clip.name + '<span style="color:#ff5555;">' + isPlaying + '</span><br>';
 						});
 
 						panel.innerHTML = html;
 						document.body.appendChild(panel);
 
-						// [0] Walk | [1] Idle | [2] Lumbering (cortar lena)
-						const action = mixer.clipAction( animObj.animations[ 2 ] );
+						// [0] Idle | [1] Lumbering (cortar lena) | [2] Walk
+						const action = mixer.clipAction( animObj.animations[ 1 ] );
 						action.play();
 
 					} );
@@ -215,3 +231,4 @@
 		</script>
 	</body>
 </html>
+
