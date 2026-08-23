@@ -93,6 +93,11 @@
 					object.position.z = -1.5;
 //					object.rotation.y = Math.PI / 2;   // Rotando 90
 
+					mixer = new THREE.AnimationMixer( object );
+
+					const action = mixer.clipAction( object.animations[ 4] );
+					action.play();
+
 					object.traverse( function ( child ) {
 
 						if ( child.isMesh ) {
@@ -101,46 +106,6 @@
 							child.receiveShadow = true;
 
 						}
-
-					} );
-
-					// Cargar animaciones limpias desde archivo separado
-					const animLoader = new FBXLoader();
-					animLoader.load( 'models/fbx/FreeCharacter_Animations.FBX', function ( animObj ) {
-
-						// Crear mixer sobre el modelo de Lenador.fbx (que tiene texturas)
-						mixer = new THREE.AnimationMixer( object );
-
-						// Panel de animaciones
-						const panel = document.createElement('div');
-						panel.id = 'animPanel';
-						panel.style.position = 'absolute';
-						panel.style.top = '20px';
-						panel.style.left = '20px';
-						panel.style.background = 'rgba(0, 0, 0, 0.85)';
-						panel.style.color = '#00ff88';
-						panel.style.padding = '20px';
-						panel.style.fontFamily = 'monospace';
-						panel.style.fontSize = '15px';
-						panel.style.borderRadius = '10px';
-						panel.style.zIndex = '999';
-						panel.style.maxWidth = '320px';
-						panel.style.lineHeight = '1.6';
-
-						let html = '<strong style="color:#fff; font-size:16px;">Animaciones limpias inyectadas</strong><br>';
-						html += '<span style="color:#aaa;">Total: ' + animObj.animations.length + '</span><br><br>';
-
-						animObj.animations.forEach((clip, i) => {
-							const isPlaying = (i === 1) ? ' <- ACTUAL' : '';
-							html += '<span style="color:#ffd700;">[' + i + ']</span> ' + clip.name + '<span style="color:#ff5555;">' + isPlaying + '</span><br>';
-						});
-
-						panel.innerHTML = html;
-						document.body.appendChild(panel);
-
-						// [0] Idle | [1] Lumbering (cortar lena) | [2] Walk
-						const action = mixer.clipAction( animObj.animations[ 1 ] );
-						action.play();
 
 					} );
 
@@ -165,17 +130,7 @@
 
 				document.body.appendChild( ARButton.createButton( renderer ) );
 
-				// Ocultar panel al entrar a XR
-				renderer.xr.addEventListener('sessionstart', () => {
-					const panel = document.getElementById('animPanel');
-					if (panel) panel.style.display = 'none';
-				});
 
-				// Mostrar panel al salir de XR
-				renderer.xr.addEventListener('sessionend', () => {
-					const panel = document.getElementById('animPanel');
-					if (panel) panel.style.display = 'block';
-				});
 
 				//
 
