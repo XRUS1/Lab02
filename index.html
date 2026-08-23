@@ -83,7 +83,7 @@
 				// Load FBX Model and Animation
 
 				const loader = new FBXLoader();
-				loader.load( 'models/TurtleShellPBR.fbx', function ( object ) {
+				loader.load( 'models/Lenador.fbx', function ( object ) {
 
 					// Add scale and transform
 
@@ -95,7 +95,7 @@
 
 					mixer = new THREE.AnimationMixer( object );
 
-					const action = mixer.clipAction( object.animations[ 2] );
+					const action = mixer.clipAction( object.animations[ 4] );
 					action.play();
 
 					object.traverse( function ( child ) {
