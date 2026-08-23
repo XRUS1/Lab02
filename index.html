@@ -8,8 +8,6 @@
 		<style>
 			body {
 				touch-action: none;
-				margin: 0;
-				overflow: hidden;
 			}
 		</style>
 	</head>
@@ -82,49 +80,36 @@
 					} );
 
 
-				// LoadingManager para reescribir rutas de texturas
-				const manager = new THREE.LoadingManager();
-				manager.setURLModifier( function ( url ) {
+				// Load FBX Model and Animation
 
-					// Si la URL contiene un nombre de textura NPC_, redirigir a la carpeta local
-					if ( url.includes( 'NPC_' ) ) {
-						const parts = url.split( /[\\\\/]/ );
-						const filename = parts[ parts.length - 1 ];
-						return 'models/fbx/Textures/' + filename;
-					}
+				const loader = new FBXLoader();
+				loader.load( 'models/fbx/Lenador.fbx', function ( object ) {
 
-					return url;
+					// Add scale and transform
 
-				} );
+					object.scale.set(.004, .004, .004);
+					object.position.x = 0.8;
+					object.position.y = -0.5;
+					object.position.z = -1.5;
+//					object.rotation.y = Math.PI / 2;   // Rotando 90
 
+					object.traverse( function ( child ) {
 
-				// 1. Cargar el MODELO 3D del lenador
-				const modelLoader = new FBXLoader( manager );
-				modelLoader.load( 'models/fbx/FreeCharacter_model.FBX', function ( personaje ) {
-
-					// Escala y posicion
-					personaje.scale.set(.004, .004, .004);
-					personaje.position.x = 0.8;
-					personaje.position.y = -0.5;
-					personaje.position.z = -1.5;
-
-					// Sombras y materiales
-					personaje.traverse( function ( child ) {
 						if ( child.isMesh ) {
+
 							child.castShadow = true;
 							child.receiveShadow = true;
-							if ( child.material ) {
-								child.material.needsUpdate = true;
-							}
+
 						}
+
 					} );
 
-					// 2. Cargar el archivo de ANIMACIONES
-					const animLoader = new FBXLoader( manager );
+					// Cargar animaciones limpias desde archivo separado
+					const animLoader = new FBXLoader();
 					animLoader.load( 'models/fbx/FreeCharacter_Animations.FBX', function ( animObj ) {
 
-						// Crear mixer SOBRE el personaje (modelo)
-						mixer = new THREE.AnimationMixer( personaje );
+						// Crear mixer sobre el modelo de Lenador.fbx (que tiene texturas)
+						mixer = new THREE.AnimationMixer( object );
 
 						// Panel de animaciones
 						const panel = document.createElement('div');
@@ -142,7 +127,7 @@
 						panel.style.maxWidth = '320px';
 						panel.style.lineHeight = '1.6';
 
-						let html = '<strong style="color:#fff; font-size:16px;">Animaciones (Modelo + Anims)</strong><br>';
+						let html = '<strong style="color:#fff; font-size:16px;">Animaciones limpias inyectadas</strong><br>';
 						html += '<span style="color:#aaa;">Total: ' + animObj.animations.length + '</span><br><br>';
 
 						animObj.animations.forEach((clip, i) => {
@@ -159,7 +144,7 @@
 
 					} );
 
-					scene.add( personaje );
+					scene.add( object );
 
 				} );
 
@@ -231,4 +216,3 @@
 		</script>
 	</body>
 </html>
-
