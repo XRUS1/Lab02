@@ -80,8 +80,66 @@
 					} );
 
 
-				// Cargar lenador con modelo, texturas y animaciones limpias
-				cargarLenador();
+				// Load FBX Model and Animation
+
+				const loader = new FBXLoader();
+				loader.load( 'models/fbx/FreeCharacter_Mecanim.FBX', function ( object ) {
+
+					// Add scale and transform
+
+					object.scale.set(.004, .004, .004);
+					object.position.x = 0.8;
+					object.position.y = -0.5;
+					object.position.z = -1.5;
+//					object.rotation.y = Math.PI / 2;   // Rotando 90
+
+					// Panel para ver las animaciones de este archivo
+					const panel = document.createElement('div');
+					panel.id = 'animPanel';
+					panel.style.position = 'absolute';
+					panel.style.top = '20px';
+					panel.style.left = '20px';
+					panel.style.background = 'rgba(0, 0, 0, 0.85)';
+					panel.style.color = '#00ff88';
+					panel.style.padding = '20px';
+					panel.style.fontFamily = 'monospace';
+					panel.style.fontSize = '15px';
+					panel.style.borderRadius = '10px';
+					panel.style.zIndex = '999';
+					panel.style.maxWidth = '320px';
+					panel.style.lineHeight = '1.6';
+
+					let html = '<strong style="color:#fff; font-size:16px;">FreeCharacter_Mecanim.FBX</strong><br>';
+					html += '<span style="color:#aaa;">Total: ' + object.animations.length + '</span><br><br>';
+
+					object.animations.forEach((clip, i) => {
+						const isPlaying = (i === 2) ? ' <- ACTUAL' : '';
+						html += '<span style="color:#ffd700;">[' + i + ']</span> ' + clip.name + '<span style="color:#ff5555;">' + isPlaying + '</span><br>';
+					});
+
+					panel.innerHTML = html;
+					document.body.appendChild(panel);
+
+					mixer = new THREE.AnimationMixer( object );
+
+					// Probar con [2] - ajustar segun lo que muestre el panel
+					const action = mixer.clipAction( object.animations[ 2 ] );
+					action.play();
+
+					object.traverse( function ( child ) {
+
+						if ( child.isMesh ) {
+
+							child.castShadow = true;
+							child.receiveShadow = true;
+
+						}
+
+					} );
+
+					scene.add( object );
+
+				} );
 
 				//
 
@@ -100,69 +158,23 @@
 
 				document.body.appendChild( ARButton.createButton( renderer ) );
 
+				// Ocultar panel al entrar a XR
+				renderer.xr.addEventListener('sessionstart', () => {
+					const panel = document.getElementById('animPanel');
+					if (panel) panel.style.display = 'none';
+				});
+
+				// Mostrar panel al salir de XR
+				renderer.xr.addEventListener('sessionend', () => {
+					const panel = document.getElementById('animPanel');
+					if (panel) panel.style.display = 'block';
+				});
+
 				//
 
 				window.addEventListener( 'resize', onWindowResize );
 
 			}
-
-
-			function cargarLenador() {
-
-				// LoadingManager redirige texturas a la carpeta local
-				const manager = new THREE.LoadingManager();
-				manager.setURLModifier( function ( url ) {
-
-					const filename = url.split( /[\\\/]/ ).pop();
-
-					if ( filename.indexOf( 'NPC_' ) === 0 ) {
-						return 'models/fbx/Textures/' + filename;
-					}
-
-					return url;
-
-				} );
-
-
-				// 1. Cargar MODELO 3D con texturas
-				const modelLoader = new FBXLoader( manager );
-				modelLoader.load( 'models/fbx/FreeCharacter_model.FBX', function ( object ) {
-
-					// Add scale and transform
-					object.scale.set(.004, .004, .004);
-					object.position.x = 0.8;
-					object.position.y = -0.5;
-					object.position.z = -1.5;
-
-					object.traverse( function ( child ) {
-
-						if ( child.isMesh ) {
-
-							child.castShadow = true;
-							child.receiveShadow = true;
-
-						}
-
-					} );
-
-					// 2. Cargar ANIMACIONES limpias y aplicarlas al modelo
-					const animLoader = new FBXLoader();
-					animLoader.load( 'models/fbx/FreeCharacter_Animations.FBX', function ( animObj ) {
-
-						mixer = new THREE.AnimationMixer( object );
-
-						// [0] Idle | [1] Lumbering | [2] Walk
-						const action = mixer.clipAction( animObj.animations[ 1 ] );
-						action.play();
-
-					} );
-
-					scene.add( object );
-
-				} );
-
-			}
-
 
 			function onWindowResize() {
 
