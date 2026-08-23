@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -82,64 +83,67 @@
 					} );
 
 
-				// Load FBX Model and Animation
+				// Load FBX Model and Animation (SEPARADOS)
 
-				const loader = new FBXLoader();
-				loader.load( 'models/fbx/Lenador.fbx', function ( object ) {
+				// 1. Cargar el MODELO 3D del lenador
+				const modelLoader = new FBXLoader();
+				modelLoader.load( 'models/fbx/FreeCharacter_model.FBX', function ( personaje ) {
 
-					// Add scale and transform
+					// Escala y posicion
+					personaje.scale.set(.004, .004, .004);
+					personaje.position.x = 0.8;
+					personaje.position.y = -0.5;
+					personaje.position.z = -1.5;
 
-					object.scale.set(.004, .004, .004);
-					object.position.x = 0.8;
-					object.position.y = -0.5;
-					object.position.z = -1.5;
-//					object.rotation.y = Math.PI / 2;   // Rotando 90
-
-					// --- PANEL DE ANIMACIONES EN PANTALLA ---
-					const panel = document.createElement('div');
-					panel.id = 'animPanel';
-					panel.style.position = 'absolute';
-					panel.style.top = '20px';
-					panel.style.left = '20px';
-					panel.style.background = 'rgba(0, 0, 0, 0.85)';
-					panel.style.color = '#00ff88';
-					panel.style.padding = '20px';
-					panel.style.fontFamily = 'monospace';
-					panel.style.fontSize = '15px';
-					panel.style.borderRadius = '10px';
-					panel.style.zIndex = '999';
-					panel.style.maxWidth = '320px';
-					panel.style.lineHeight = '1.6';
-
-					let html = `<strong style="color:#fff; font-size:16px;">🎬 Animaciones de Lenador.fbx</strong><br>`;
-					html += `<span style="color:#aaa;">Total: ${object.animations.length}</span><br><br>`;
-
-					object.animations.forEach((clip, i) => {
-						const isPlaying = (i === 4) ? ' ← ACTUAL' : '';
-						html += `<span style="color:#ffd700;">[${i}]</span> ${clip.name}<span style="color:#ff5555;">${isPlaying}</span><br>`;
-					});
-
-					panel.innerHTML = html;
-					document.body.appendChild(panel);
-					// -----------------------------------------
-
-					mixer = new THREE.AnimationMixer( object );
-
-					const action = mixer.clipAction( object.animations[ 2] );
-					action.play();
-
-					object.traverse( function ( child ) {
-
+					// Sombras
+					personaje.traverse( function ( child ) {
 						if ( child.isMesh ) {
-
 							child.castShadow = true;
 							child.receiveShadow = true;
-
 						}
+					} );
+
+					// 2. Cargar el archivo de ANIMACIONES
+					const animLoader = new FBXLoader();
+					animLoader.load( 'models/fbx/FreeCharacter_Animations.FBX', function ( animObj ) {
+
+						// Crear mixer SOBRE el personaje (modelo)
+						mixer = new THREE.AnimationMixer( personaje );
+
+						// Panel de animaciones
+						const panel = document.createElement('div');
+						panel.id = 'animPanel';
+						panel.style.position = 'absolute';
+						panel.style.top = '20px';
+						panel.style.left = '20px';
+						panel.style.background = 'rgba(0, 0, 0, 0.85)';
+						panel.style.color = '#00ff88';
+						panel.style.padding = '20px';
+						panel.style.fontFamily = 'monospace';
+						panel.style.fontSize = '15px';
+						panel.style.borderRadius = '10px';
+						panel.style.zIndex = '999';
+						panel.style.maxWidth = '320px';
+						panel.style.lineHeight = '1.6';
+
+						let html = '<strong style="color:#fff; font-size:16px;">Animaciones (Modelo + Anims)</strong><br>';
+						html += '<span style="color:#aaa;">Total: ' + animObj.animations.length + '</span><br><br>';
+
+						animObj.animations.forEach((clip, i) => {
+							const isPlaying = (i === 2) ? ' <- ACTUAL' : '';
+							html += '<span style="color:#ffd700;">[' + i + ']</span> ' + clip.name + '<span style="color:#ff5555;">' + isPlaying + '</span><br>';
+						});
+
+						panel.innerHTML = html;
+						document.body.appendChild(panel);
+
+						// [0] Walk | [1] Idle | [2] Lumbering (cortar lena)
+						const action = mixer.clipAction( animObj.animations[ 2 ] );
+						action.play();
 
 					} );
 
-					scene.add( object );
+					scene.add( personaje );
 
 				} );
 
