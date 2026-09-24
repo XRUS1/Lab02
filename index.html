@@ -11,7 +11,6 @@ touch-action: none;
 margin: 0;
 overflow: hidden;
 }
-/* Estilos para el texto indicador en el escenario 2D */
 #indicador-version {
 position: absolute;
 top: 20px;
@@ -24,14 +23,13 @@ background: rgba(0, 0, 0, 0.6);
 padding: 10px 15px;
 border-radius: 5px;
 border: 1px solid rgba(255, 255, 255, 0.2);
-pointer-events: none; /* Evita que estorbe si haces clic cerca */
-z-index: 9999; /* Asegura que flote por encima del canvas 3D */
+pointer-events: none;
+z-index: 9999;
 }
 </style>
 </head>
 <body>
-<!-- Texto indicador antes de entrar a XR -->
-<div id="indicador-version">Versi髇 Passthrough para MetaQuest</div>
+<div id="indicador-version">Versi贸n Passthrough para MetaQuest</div>
 
 <!-- Import maps polyfill -->
 <script async src="https://unpkg.com"></script>
@@ -44,7 +42,7 @@ z-index: 9999; /* Asegura que flote por encima del canvas 3D */
 }
 </script>
 <script type="module">
-// Versi髇 Passthrough para MetaQuest
+// Versi贸n Passthrough para MetaQuest
 import * as THREE from 'three';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import Stats from 'three/addons/libs/stats.module.js';
@@ -64,9 +62,13 @@ document.body.appendChild( container );
 
 scene = new THREE.Scene();
 
+// BASE S脫LIDA: A帽adimos un fondo gris oscuro para obligar al navegador a pintar los modelos
+scene.background = new THREE.Color( 0x202020 );
+
 camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
 
-scene.add( new THREE.HemisphereLight( 0xa5a5a5, 0x898989, 3 ) );
+// ILUMINACI脫N REFORZADA: Subimos la intensidad para asegurar visibilidad en VR
+scene.add( new THREE.HemisphereLight( 0xffffff, 0x444444, 3 ) );
 const light = new THREE.DirectionalLight( 0xffffff, 3 );
 light.position.set( 1, 1, 1 ).normalize();
 scene.add( light );
@@ -86,7 +88,7 @@ scene.add( gltf.scene );
 const loader = new FBXLoader();
 loader.load( 'models/fbx/Lenador.fbx', function ( object ) {
 mixer = new THREE.AnimationMixer( object );
-const action = mixer.clipAction( object.animations );
+const action = mixer.clipAction( object.animations[ 4 ] ); // Mantenemos tu animaci贸n exacta
 action.play();
 object.traverse( function ( child ) {
 if ( child.isMesh ) {
@@ -101,8 +103,9 @@ object.position.z = -1.5;
 scene.add( object );
 } );
 
-renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
-renderer.setPixelRatio( window.devicePixelRatio );
+// RENDEREADOR OPTIMIZADO PARA SUAVIZADO Y ALTO RENDIMIENTO
+renderer = new THREE.WebGLRenderer( { antialias: true, powerPreference: "high-performance" } );
+renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) );
 renderer.setSize( window.innerWidth, window.innerHeight );
 renderer.xr.enabled = true;
 container.appendChild( renderer.domElement );
@@ -110,19 +113,8 @@ container.appendChild( renderer.domElement );
 stats = new Stats();
 container.appendChild( stats.dom );
 
-document.body.appendChild( VRButton.createButton( renderer, {
-    requiredFeatures: [ 'local-floor' ],
-    optionalFeatures: [ 'background-blend-mode' ]
-} ) );
-
-renderer.xr.addEventListener( 'sessionstart', () => {
-    const session = renderer.xr.getSession();
-    if ( session.requestBlendMode ) {
-        session.requestBlendMode( 'alpha-blend' ).catch( ( err ) => {
-            console.warn( 'No se pudo activar el modo de mezcla alpha:', err );
-        } );
-    }
-} );
+// Bot贸n de VR Est谩ndar
+document.body.appendChild( VRButton.createButton( renderer ) );
 
 window.addEventListener( 'resize', onWindowResize );
 }
